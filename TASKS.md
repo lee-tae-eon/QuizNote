@@ -15,5 +15,5 @@
 - [ ] [x] 🟢 DONE: 오답노트 화면 및 '다시 풀기' 모드 구현
 
 ### DAY 2: 확장 및 폴리싱 (Expansion & Polish)
-- [ ] 🟡 IN PROGRESS: 외부 파일(JSON/CSV) 임포트 기능 구현
-- [ ] 🔴 UX 폴리싱 및 실기기 최종 테스트
+- [ ] [x] 🟢 DONE: 외부 파일(JSON/CSV) 임포트 기능 구현
+- [ ] [x] 🟢 DONE: UX 폴리싱 및 실기기 최종 테스트
