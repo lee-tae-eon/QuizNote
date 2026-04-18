@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Alert, ActivityIndicator, Dimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 
 // 샘플 데이터 임포트
-import sampleData from './Data/SampleQuestions.json';
+import initialData from './Data/SampleQuestions.json';
+
+const { width } = Dimensions.get('window');
 
 // 타입 정의
 interface Question {
@@ -18,11 +22,13 @@ interface Question {
   explanation: string;
 }
 
-const STORAGE_KEY = 'WRONG_ANSWERS_IDS';
+const WRONG_KEY = 'WRONG_ANSWERS_IDS';
+const CUSTOM_KEY = 'CUSTOM_QUESTIONS';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [wrongIds, setWrongIds] = useState<number[]>([]);
+  const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
   const [isWrongNoteMode, setIsWrongNoteMode] = useState(false);
   
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -30,72 +36,112 @@ export default function App() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [score, setScore] = useState(0);
 
-  // 현재 모드에 따른 문제 목록 필터링
+  const allQuestions = [...initialData, ...customQuestions];
   const questions = isWrongNoteMode 
-    ? sampleData.filter(q => wrongIds.includes(q.id))
-    : sampleData;
+    ? allQuestions.filter(q => wrongIds.includes(q.id))
+    : allQuestions;
 
   const currentQuestion: Question | undefined = questions[currentIdx];
 
-  // 오답 데이터 불러오기
   useEffect(() => {
-    loadWrongIds();
+    initData();
   }, []);
 
-  const loadWrongIds = async () => {
+  const initData = async () => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setWrongIds(JSON.parse(stored));
-      }
+      const [storedWrong, storedCustom] = await Promise.all([
+        AsyncStorage.getItem(WRONG_KEY),
+        AsyncStorage.getItem(CUSTOM_KEY)
+      ]);
+      if (storedWrong) setWrongIds(JSON.parse(storedWrong));
+      if (storedCustom) setCustomQuestions(JSON.parse(storedCustom));
     } catch (e) {
-      console.error('Failed to load wrong answers', e);
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
   const saveWrongId = async (id: number) => {
-    try {
-      if (!wrongIds.includes(id)) {
-        const newIds = [...wrongIds, id];
-        setWrongIds(newIds);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newIds));
-      }
-    } catch (e) {
-      console.error('Failed to save wrong answer', e);
+    if (!wrongIds.includes(id)) {
+      const newIds = [...wrongIds, id];
+      setWrongIds(newIds);
+      await AsyncStorage.setItem(WRONG_KEY, JSON.stringify(newIds));
     }
   };
 
   const removeWrongId = async (id: number) => {
+    const newIds = wrongIds.filter(val => val !== id);
+    setWrongIds(newIds);
+    await AsyncStorage.setItem(WRONG_KEY, JSON.stringify(newIds));
+    if (isWrongNoteMode && currentIdx >= newIds.length && currentIdx > 0) {
+      setCurrentIdx(currentIdx - 1);
+    }
+  };
+
+  // CSV 파싱 로직 (간이 구현)
+  const parseCSV = (text: string): Partial<Question>[] => {
+    const lines = text.split(/\r?\n/);
+    return lines.slice(1).filter(line => line.trim()).map(line => {
+      // 콤마로 분리 (따옴표 내 콤마는 무시하는 정규식 사용 권장이나 여기선 심플하게)
+      const [subject, source, question, c1, c2, c3, c4, answer, explanation] = line.split(',');
+      return {
+        subject: subject?.trim(),
+        source: source?.trim(),
+        question: question?.trim(),
+        choices: [c1?.trim(), c2?.trim(), c3?.trim(), c4?.trim()],
+        answer: parseInt(answer?.trim()) - 1, // 1~4 입력을 0~3으로 변환
+        explanation: explanation?.trim()
+      };
+    });
+  };
+
+  const handleImport = async () => {
     try {
-      const newIds = wrongIds.filter(val => val !== id);
-      setWrongIds(newIds);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newIds));
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/json', 'text/comma-separated-values', 'text/plain'],
+        copyToCacheDirectory: true
+      });
+
+      if (result.canceled) return;
+
+      const fileUri = result.assets[0].uri;
+      const fileName = result.assets[0].name.toLowerCase();
+      const fileContent = await FileSystem.readAsStringAsync(fileUri);
       
-      // 만약 오답노트 모드에서 마지막 문제를 지웠다면 인덱스 조절
-      if (isWrongNoteMode && currentIdx >= newIds.length && currentIdx > 0) {
-        setCurrentIdx(currentIdx - 1);
+      let importedData: any[] = [];
+      if (fileName.endsWith('.json')) {
+        importedData = JSON.parse(fileContent);
+      } else if (fileName.endsWith('.csv')) {
+        importedData = parseCSV(fileContent);
       }
+
+      if (!Array.isArray(importedData)) throw new Error('Invalid format');
+
+      const lastId = allQuestions.length > 0 ? Math.max(...allQuestions.map(q => q.id)) : 0;
+      const processedData = importedData.map((q, idx) => ({
+        ...q,
+        id: lastId + idx + 1
+      }));
+
+      const newCustomQuestions = [...customQuestions, ...processedData];
+      setCustomQuestions(newCustomQuestions);
+      await AsyncStorage.setItem(CUSTOM_KEY, JSON.stringify(newCustomQuestions));
+
+      Alert.alert('임포트 완료', `${processedData.length}개의 문제를 추가했습니다.`);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
-      console.error('Failed to remove wrong answer', e);
+      Alert.alert('오류', '파일 형식이 올바르지 않습니다.');
     }
   };
 
   const handleSelect = (idx: number) => {
     if (selectedIdx !== null || !currentQuestion) return;
-    
     setSelectedIdx(idx);
     setShowExplanation(true);
-
     if (idx === currentQuestion.answer) {
       setScore(score + 1);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      
-      // 오답노트 모드에서 맞췄다면 오답 목록에서 제거할지 물어보기
-      if (isWrongNoteMode) {
-        // 자동 제거 대신 사용자 선택이나 로직 추가 가능 (여기선 유지)
-      }
     } else {
       saveWrongId(currentQuestion.id);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -108,140 +154,83 @@ export default function App() {
       setSelectedIdx(null);
       setShowExplanation(false);
     } else {
-      Alert.alert('학습 완료!', `최종 점수: ${score} / ${questions.length}`, [
-        { 
-          text: '다시 풀기', 
-          onPress: () => {
-            setCurrentIdx(0);
-            setSelectedIdx(null);
-            setShowExplanation(false);
-            setScore(0);
-          } 
-        },
-        {
-          text: '종료',
-          style: 'cancel'
-        }
+      Alert.alert('학습 완료!', `점수: ${score}/${questions.length}`, [
+        { text: '다시 풀기', onPress: () => { setCurrentIdx(0); setSelectedIdx(null); setShowExplanation(false); setScore(0); } }
       ]);
     }
   };
 
-  const toggleMode = () => {
-    if (!isWrongNoteMode && wrongIds.length === 0) {
-      Alert.alert('알림', '저장된 오답이 없습니다!');
-      return;
-    }
-    setIsWrongNoteMode(!isWrongNoteMode);
-    setCurrentIdx(0);
-    setSelectedIdx(null);
-    setShowExplanation(false);
-    setScore(0);
-  };
+  const progress = questions.length > 0 ? (currentIdx + 1) / questions.length : 0;
 
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
+  if (loading) return <View style={styles.centerContainer}><ActivityIndicator size="large" color="#007AFF" /></View>;
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      {/* 상단 탭/모드 표시 */}
-      <View style={styles.modeSelector}>
-        <TouchableOpacity 
-          style={[styles.modeButton, !isWrongNoteMode && styles.activeModeButton]} 
-          onPress={() => isWrongNoteMode && toggleMode()}
-        >
-          <Text style={[styles.modeButtonText, !isWrongNoteMode && styles.activeModeButtonText]}>전체 문제</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.modeButton, isWrongNoteMode && styles.activeWrongModeButton]} 
-          onPress={() => !isWrongNoteMode && toggleMode()}
-        >
-          <Text style={[styles.modeButtonText, isWrongNoteMode && styles.activeModeButtonText]}>오답 노트 ({wrongIds.length})</Text>
-        </TouchableOpacity>
+      <View style={styles.topBar}>
+        <View style={styles.modeSelector}>
+          <TouchableOpacity style={[styles.modeButton, !isWrongNoteMode && styles.activeModeButton]} onPress={() => isWrongNoteMode && setIsWrongNoteMode(false)}>
+            <Text style={[styles.modeButtonText, !isWrongNoteMode && styles.activeModeButtonText]}>전체</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.modeButton, isWrongNoteMode && styles.activeWrongModeButton]} onPress={() => !isWrongNoteMode && setIsWrongNoteMode(true)}>
+            <Text style={[styles.modeButtonText, isWrongNoteMode && styles.activeModeButtonText]}>오답({wrongIds.length})</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.importButton} onPress={handleImport}><Text style={styles.importButtonText}>임포트 +</Text></TouchableOpacity>
+      </View>
+
+      {/* Progress Bar */}
+      <View style={styles.progressBarContainer}>
+        <View style={[styles.progressBar, { width: width * progress }]} />
       </View>
 
       {questions.length > 0 ? (
-        <>
+        <ScrollView style={styles.quizContainer} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <View>
+            <View style={{flex:1}}>
               <Text style={styles.sourceText}>{currentQuestion.source}</Text>
               <Text style={styles.subjectText}>[{currentQuestion.subject}]</Text>
             </View>
-            <View style={styles.progressBadge}>
-              <Text style={styles.progressText}>{currentIdx + 1} / {questions.length}</Text>
-            </View>
+            <Text style={styles.progressText}>{currentIdx + 1} / {questions.length}</Text>
           </View>
 
-          <ScrollView style={styles.quizContainer} showsVerticalScrollIndicator={false}>
-            <View style={styles.questionBox}>
-              <Text style={styles.questionText}>{currentQuestion.question}</Text>
-            </View>
+          <Text style={styles.questionText}>{currentQuestion.question}</Text>
 
-            <View style={styles.choicesBox}>
-              {currentQuestion.choices.map((choice, idx) => {
-                let buttonStyle: any = styles.choiceButton;
-                let textStyle: any = styles.choiceText;
-                
-                if (selectedIdx !== null) {
-                  if (idx === currentQuestion.answer) {
-                    buttonStyle = [styles.choiceButton, styles.correctButton];
-                    textStyle = [styles.choiceText, styles.correctText];
-                  } else if (idx === selectedIdx) {
-                    buttonStyle = [styles.choiceButton, styles.wrongButton];
-                    textStyle = [styles.choiceText, styles.wrongText];
-                  }
-                }
-
-                return (
-                  <TouchableOpacity 
-                    key={idx} 
-                    style={buttonStyle} 
-                    onPress={() => handleSelect(idx)}
-                    disabled={selectedIdx !== null}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.choiceNumberBox}>
-                       <Text style={[styles.choiceNumber, selectedIdx !== null && idx === currentQuestion.answer && {color: '#FFF'}]}>{idx + 1}</Text>
-                    </View>
-                    <Text style={textStyle}>{choice}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {showExplanation && (
-              <View style={styles.explanationBox}>
-                <View style={styles.explanationHeader}>
-                   <Text style={styles.explanationTitle}>💡 정답 해설</Text>
-                   {isWrongNoteMode && selectedIdx === currentQuestion.answer && (
-                     <TouchableOpacity onPress={() => removeWrongId(currentQuestion.id)}>
-                        <Text style={styles.removeText}>오답 제거 ✕</Text>
-                     </TouchableOpacity>
-                   )}
-                </View>
-                <Text style={styles.explanationText}>{currentQuestion.explanation}</Text>
-                <TouchableOpacity style={styles.nextButton} onPress={nextQuestion}>
-                  <Text style={styles.nextButtonText}>
-                    {currentIdx < questions.length - 1 ? '다음 문제로' : '결과 확인'}
-                  </Text>
+          <View style={styles.choicesBox}>
+            {currentQuestion.choices.map((choice, idx) => {
+              let btnStyle: any = styles.choiceButton;
+              let txtStyle: any = styles.choiceText;
+              if (selectedIdx !== null) {
+                if (idx === currentQuestion.answer) { btnStyle = [styles.choiceButton, styles.correctButton]; txtStyle = [styles.choiceText, styles.correctText]; }
+                else if (idx === selectedIdx) { btnStyle = [styles.choiceButton, styles.wrongButton]; txtStyle = [styles.choiceText, styles.wrongText]; }
+              }
+              return (
+                <TouchableOpacity key={idx} style={btnStyle} onPress={() => handleSelect(idx)} disabled={selectedIdx !== null}>
+                  <Text style={txtStyle}>{idx + 1}. {choice}</Text>
                 </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {showExplanation && (
+            <View style={styles.explanationBox}>
+              <View style={styles.explanationHeader}>
+                <Text style={styles.explanationTitle}>💡 해설</Text>
+                {isWrongNoteMode && selectedIdx === currentQuestion.answer && (
+                  <TouchableOpacity onPress={() => removeWrongId(currentQuestion.id)}><Text style={styles.removeText}>오답 제거</Text></TouchableOpacity>
+                )}
               </View>
-            )}
-            <View style={{ height: 40 }} />
-          </ScrollView>
-        </>
+              <Text style={styles.explanationText}>{currentQuestion.explanation}</Text>
+              <TouchableOpacity style={styles.nextButton} onPress={nextQuestion}><Text style={styles.nextButtonText}>다음</Text></TouchableOpacity>
+            </View>
+          )}
+          <View style={{height: 50}} />
+        </ScrollView>
       ) : (
         <View style={styles.centerContainer}>
-          <Text style={styles.emptyText}>표시할 문제가 없습니다.</Text>
-          <TouchableOpacity style={styles.nextButton} onPress={toggleMode}>
-            <Text style={styles.nextButtonText}>전체 문제로 돌아가기</Text>
-          </TouchableOpacity>
+          <Text style={styles.emptyText}>문제가 없습니다.</Text>
+          <TouchableOpacity style={styles.nextButton} onPress={handleImport}><Text style={styles.nextButtonText}>문제 가져오기</Text></TouchableOpacity>
         </View>
       )}
     </SafeAreaView>
@@ -250,81 +239,37 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F2F2F7' },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  
-  modeSelector: { flexDirection: 'row', padding: 4, backgroundColor: '#E5E5EA', margin: 16, borderRadius: 10 },
-  modeButton: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8 },
-  activeModeButton: { backgroundColor: '#FFF', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  topBar: { flexDirection: 'row', padding: 10, backgroundColor: '#FFF', alignItems: 'center' },
+  modeSelector: { flex: 1, flexDirection: 'row', backgroundColor: '#E5E5EA', borderRadius: 8, padding: 2, marginRight: 10 },
+  modeButton: { flex: 1, paddingVertical: 6, alignItems: 'center', borderRadius: 6 },
+  activeModeButton: { backgroundColor: '#FFF' },
   activeWrongModeButton: { backgroundColor: '#FF3B30' },
-  modeButtonText: { fontSize: 13, fontWeight: '600', color: '#8E8E93' },
+  modeButtonText: { fontSize: 12, fontWeight: '600', color: '#8E8E93' },
   activeModeButtonText: { color: '#FFF' },
-  activeModeButtonTextDark: { color: '#1C1C1E' }, // Not used but for ref
-
-  header: { 
-    paddingHorizontal: 20, 
-    paddingVertical: 15, 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA'
-  },
-  sourceText: { color: '#8E8E93', fontSize: 11, marginBottom: 2 },
-  subjectText: { fontSize: 14, fontWeight: 'bold', color: '#007AFF' },
-  progressBadge: { backgroundColor: '#E5E5EA', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  progressText: { fontSize: 12, fontWeight: '600', color: '#3A3A3C' },
-  
+  importButton: { backgroundColor: '#007AFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  importButtonText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
+  progressBarContainer: { height: 4, backgroundColor: '#E5E5EA', width: '100%' },
+  progressBar: { height: '100%', backgroundColor: '#007AFF' },
   quizContainer: { padding: 20 },
-  questionBox: { marginBottom: 25 },
-  questionText: { fontSize: 19, fontWeight: '700', lineHeight: 28, color: '#1C1C1E' },
-  
+  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  sourceText: { fontSize: 11, color: '#8E8E93' },
+  subjectText: { fontSize: 14, fontWeight: 'bold', color: '#007AFF' },
+  progressText: { fontSize: 12, color: '#3A3A3C', fontWeight: 'bold' },
+  questionText: { fontSize: 19, fontWeight: 'bold', lineHeight: 26, color: '#1C1C1E', marginBottom: 25 },
   choicesBox: { marginBottom: 20 },
-  choiceButton: { 
-    backgroundColor: '#FFF', 
-    padding: 16, 
-    borderRadius: 14, 
-    marginBottom: 12, 
-    flexDirection: 'row', 
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2
-  },
-  choiceNumberBox: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#F2F2F7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12
-  },
-  choiceNumber: { fontSize: 14, fontWeight: 'bold', color: '#8E8E93' },
-  choiceText: { fontSize: 16, color: '#3A3A3C', flex: 1 },
-  
+  choiceButton: { backgroundColor: '#FFF', padding: 16, borderRadius: 12, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
+  choiceText: { fontSize: 16, color: '#3A3A3C' },
   correctButton: { backgroundColor: '#34C759' },
-  correctText: { color: '#FFF', fontWeight: '600' },
+  correctText: { color: '#FFF', fontWeight: 'bold' },
   wrongButton: { backgroundColor: '#FF3B30' },
-  wrongText: { color: '#FFF', fontWeight: '600' },
-  
-  explanationBox: { 
-    padding: 20, 
-    backgroundColor: '#FFF', 
-    borderRadius: 16, 
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4
-  },
-  explanationHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  explanationTitle: { fontSize: 16, fontWeight: 'bold', color: '#1C1C1E' },
-  removeText: { fontSize: 12, color: '#FF3B30', fontWeight: '600' },
-  
-  explanationText: { fontSize: 15, lineHeight: 22, color: '#48484A', marginBottom: 20 },
-  nextButton: { backgroundColor: '#007AFF', paddingHorizontal: 30, paddingVertical: 15, borderRadius: 12, alignItems: 'center' },
-  nextButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
-  emptyText: { fontSize: 16, color: '#8E8E93', marginBottom: 20 }
+  wrongText: { color: '#FFF', fontWeight: 'bold' },
+  explanationBox: { padding: 20, backgroundColor: '#FFF', borderRadius: 16, shadowOpacity: 0.1, shadowRadius: 4 },
+  explanationHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  explanationTitle: { fontWeight: 'bold', fontSize: 16 },
+  removeText: { color: '#FF3B30', fontSize: 12, fontWeight: 'bold' },
+  explanationText: { fontSize: 15, color: '#48484A', lineHeight: 22, marginBottom: 20 },
+  nextButton: { backgroundColor: '#007AFF', padding: 15, borderRadius: 12, alignItems: 'center' },
+  nextButtonText: { color: '#FFF', fontWeight: 'bold' },
+  emptyText: { color: '#8E8E93', marginBottom: 20 }
 });
