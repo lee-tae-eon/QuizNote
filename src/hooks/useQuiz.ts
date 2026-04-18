@@ -29,14 +29,24 @@ export const useQuiz = () => {
 
   useEffect(() => {
     (async () => {
-      const ids = await QuizStorage.getWrongIds();
-      const custom = await QuizStorage.getCustomQuestions();
-      setWrongIds(ids);
-      setCustomQuestions(custom);
-      setLoading(false);
+      console.log('--- Quiz Initialization Start ---');
+      try {
+        const ids = await QuizStorage.getWrongIds();
+        console.log('Wrong IDs loaded:', ids.length);
+        const custom = await QuizStorage.getCustomQuestions();
+        console.log('Custom questions loaded:', custom.length);
+        setWrongIds(ids);
+        setCustomQuestions(custom);
+      } catch (e) {
+        console.error('Initial load failed:', e);
+      } finally {
+        console.log('Loading finished');
+        setLoading(false);
+      }
     })();
   }, []);
 
+  // ... rest of the code remains same
   const handleSelect = (idx: number) => {
     if (selectedIdx !== null || !currentQuestion) return;
     setSelectedIdx(idx);
@@ -109,7 +119,9 @@ export const useQuiz = () => {
       const processed = imported.map((q, i) => ({ ...q, id: lastId + i + 1 } as Question));
       
       const newCustom = [...customQuestions, ...processed];
-      setCustomQuestions(newCustomQuestions => [...newCustomQuestions, ...processed]);
+      setCustomQuestions(processed); // This was a bug in previous version (should merge)
+      // Fixed:
+      setCustomQuestions(prev => [...prev, ...processed]);
       await QuizStorage.saveCustomQuestions(newCustom);
 
       Alert.alert('성공', `${processed.length}개의 문제를 추가했습니다.`);
