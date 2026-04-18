@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "subject": "소프트웨어 설계",
+    "source": "2022년 1회차 기출",
+    "question": "애자일(Agile) 방법론의 하나인 스크럼(Scrum)과 관련된 용어로 거리가 먼 것은?",
+    "choices": [
+      "스프린트(Sprint)",
+      "제품 백로그(Product Backlog)",
+      "스크럼 마스터(Scrum Master)",
+      "WBS(Work Breakdown Structure)"
+    ],
+    "answer": 3,
+    "explanation": "WBS는 전통적인 폭포수(Waterfall) 모델 등에서 프로젝트 일정을 관리하기 위해 사용하는 작업 분할 구조도입니다. 스크럼에서는 백로그와 스프린트를 주로 사용합니다."
+  },
+  {
+    "id": 2,
+    "subject": "소프트웨어 설계",
+    "source": "2022년 2회차 기출",
+    "question": "GoF(Gang of Four)의 디자인 패턴 중 행위(Behavioral) 패턴에 해당하는 것은?",
+    "choices": [
+      "Builder",
+      "Visitor",
+      "Prototype",
+      "Bridge"
+    ],
+    "answer": 1,
+    "explanation": "Visitor는 행위 패턴입니다. Builder와 Prototype은 생성(Creational) 패턴이고, Bridge는 구조(Structural) 패턴입니다."
+  },
+  {
+    "id": 3,
+    "subject": "데이터베이스 구축",
+    "source": "2021년 3회차 기출",
+    "question": "이행적 함수 종속(Transitive Functional Dependency)을 제거하는 정규형은?",
+    "choices": [
+      "제1정규형(1NF)",
+      "제2정규형(2NF)",
+      "제3정규형(3NF)",
+      "BCNF"
+    ],
+    "answer": 2,
+    "explanation": "제3정규형(3NF)은 제2정규형을 만족하면서, 릴레이션의 모든 속성이 기본키에 이행적 함수 종속이 되지 않도록 분해하는 정규형입니다."
+  },
+  {
+    "id": 4,
+    "subject": "정보시스템 구축 관리",
+    "source": "2023년 1회차 기출",
+    "question": "보안 공격 기법 중, 네트워크 상에서 남의 신분을 위장하여 합법적인 사용자인 것처럼 접근하는 기법은?",
+    "choices": [
+      "스니핑(Sniffing)",
+      "스푸핑(Spoofing)",
+      "피싱(Phishing)",
+      "스미싱(Smishing)"
+    ],
+    "answer": 1,
+    "explanation": "스푸핑(Spoofing)은 '속이다'라는 뜻으로, IP 주소나 MAC 주소 등을 위장하여 합법적인 사용자인 것처럼 시스템에 접근하는 공격입니다. (스니핑은 엿보기입니다.)"
+  },
+  {
+    "id": 5,
+    "subject": "소프트웨어 개발",
+    "source": "2021년 1회차 기출",
+    "question": "블랙박스 테스트 기법에 해당하지 않는 것은?",
+    "choices": [
+      "경계값 분석(Boundary Value Analysis)",
+      "동치 분할(Equivalence Partitioning)",
+      "조건/결정 커버리지(Condition/Decision Coverage)",
+      "원인-결과 그래프(Cause-Effect Graphing)"
+    ],
+    "answer": 2,
+    "explanation": "조건/결정 커버리지는 내부 논리 구조를 확인하는 화이트박스 테스트 기법입니다."
+  }
+]
