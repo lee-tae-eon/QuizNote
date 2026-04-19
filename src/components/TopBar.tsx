@@ -1,45 +1,66 @@
-// src/components/TopBar.tsx
 import React from 'react';
 import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
-import { QuizMode } from '../types/quiz';
 
 interface Props {
-  mode: QuizMode;
-  wrongCount: number;
-  onToggleMode: (mode: QuizMode) => void;
-  onImport: () => void;
+  onBack: () => void;
+  title: string;
+  score: number;
 }
 
-export const TopBar: React.FC<Props> = ({ mode, wrongCount, onToggleMode, onImport }) => (
-  <View style={styles.topBar}>
-    <View style={styles.modeSelector}>
-      <TouchableOpacity 
-        style={[styles.modeButton, mode === 'ALL' && styles.activeModeButton]} 
-        onPress={() => onToggleMode('ALL')}
-      >
-        <Text style={[styles.modeButtonText, mode === 'ALL' && styles.activeModeButtonText]}>전체</Text>
+const TopBar: React.FC<Props> = ({ onBack, title, score }) => {
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <Text style={styles.backText}>‹ 목록</Text>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={[styles.modeButton, mode === 'WRONG' && styles.activeWrongModeButton]} 
-        onPress={() => onToggleMode('WRONG')}
-      >
-        <Text style={[styles.modeButtonText, mode === 'WRONG' && styles.activeModeButtonText]}>오답({wrongCount})</Text>
-      </TouchableOpacity>
+      
+      <View style={styles.titleContainer}>
+        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+      </View>
+      
+      <View style={styles.scoreBadge}>
+        <Text style={styles.scoreText}>{score}점</Text>
+      </View>
     </View>
-    <TouchableOpacity style={styles.importButton} onPress={onImport}>
-      <Text style={styles.importButtonText}>임포트 +</Text>
-    </TouchableOpacity>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
-  topBar: { flexDirection: 'row', padding: 10, backgroundColor: '#FFF', alignItems: 'center' },
-  modeSelector: { flex: 1, flexDirection: 'row', backgroundColor: '#E5E5EA', borderRadius: 8, padding: 2, marginRight: 10 },
-  modeButton: { flex: 1, paddingVertical: 6, alignItems: 'center', borderRadius: 6 },
-  activeModeButton: { backgroundColor: '#FFF' },
-  activeWrongModeButton: { backgroundColor: '#FF3B30' },
-  modeButtonText: { fontSize: 12, fontWeight: '600', color: '#8E8E93' },
-  activeModeButtonText: { color: '#FFF' },
-  importButton: { backgroundColor: '#007AFF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
-  importButtonText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
+  container: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  backButton: {
+    width: 60,
+  },
+  backText: {
+    color: '#007AFF',
+    fontSize: 17,
+    fontWeight: '500',
+  },
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#1A1A1A',
+  },
+  scoreBadge: {
+    width: 60,
+    alignItems: 'flex-end',
+  },
+  scoreText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#007AFF',
+  },
 });
+
+export default TopBar;

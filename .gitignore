@@ -5,9 +5,15 @@ node_modules/
 
 # Expo
 .expo/
+# Custom
+Data/examples/
+venv/
+src/Data/TestExtract*
+scripts/__pycache__/
+.DS_Store
+expo-env.d.ts
 dist/
 web-build/
-expo-env.d.ts
 
 # Native
 .kotlin/

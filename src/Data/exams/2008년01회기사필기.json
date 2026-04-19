@@ -1,0 +1,41 @@
+[
+  {
+    "id": "2008년01회기사필기.pdf_59",
+    "subject": "데이터베이스",
+    "question": "운영체제를 기능상 분류할 경우 “Control Program”과 “Process Program”으로 구분할 수 있다. 다음 중 “Control Program”에 해당하 는 것으로만 짝지어진 것은? - 1회",
+    "choices": [
+      "Supervisor Program",
+      "Language Translation Program",
+      "Data Management Program",
+      "Service Program ⑤ Job Control Program ⑥ Problem Program 가."
+    ],
+    "answer": 0,
+    "explanation": "해설은 준비 중입니다."
+  },
+  {
+    "id": "2008년01회기사필기.pdf_79",
+    "subject": "데이터베이스",
+    "question": "화이트 박스 테스트 기법으로만 짝지어진 것은?",
+    "choices": [
+      "Equivalence Partitioning Test",
+      "Comparison Test",
+      "Basic Path Test",
+      "Condition Test ⑤ Data Flow Test ⑥ Cause-Effect Graphing Test ⑦ Loop Test 가."
+    ],
+    "answer": 0,
+    "explanation": "해설은 준비 중입니다."
+  },
+  {
+    "id": "2008년01회기사필기.pdf_81",
+    "subject": "데이터베이스",
+    "question": "데이터 전송제어 절차를 순서대로 바르게 나타낸 것은?",
+    "choices": [
+      "통신 회선 접속",
+      "정보 전송",
+      "데이터 링크 해제",
+      "데이터 링크 확립 ⑤ 통신 회선 분리 가."
+    ],
+    "answer": 0,
+    "explanation": "해설은 준비 중입니다."
+  }
+]

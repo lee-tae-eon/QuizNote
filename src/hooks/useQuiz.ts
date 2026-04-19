@@ -1,137 +1,68 @@
-// src/hooks/useQuiz.ts
-import { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
+import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
-import { Question, QuizMode } from '../types/quiz';
-import { QuizStorage } from '../services/storage';
-import { QuizParser } from '../services/parser';
-import initialData from '../../Data/SampleQuestions.json';
+import { Question } from '../types/quiz';
 
 export const useQuiz = () => {
-  const [loading, setLoading] = useState(true);
-  const [wrongIds, setWrongIds] = useState<number[]>([]);
-  const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
-  const [mode, setMode] = useState<QuizMode>('ALL');
-  
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
+  const [showAnswer, setShowAnswer] = useState(false);
   const [score, setScore] = useState(0);
+  const [isQuizFinished, setIsQuizFinished] = useState(false);
 
-  const allQuestions = [...(initialData as Question[]), ...customQuestions];
-  const questions = mode === 'WRONG' 
-    ? allQuestions.filter(q => wrongIds.includes(q.id))
-    : allQuestions;
+  const loadQuestions = (newQuestions: Question[]) => {
+    setQuestions(newQuestions);
+    setCurrentIndex(0);
+    setSelectedChoice(null);
+    setShowAnswer(false);
+    setScore(0);
+    setIsQuizFinished(false);
+  };
 
-  const currentQuestion = questions[currentIdx];
+  const handleChoiceSelect = (index: number) => {
+    if (selectedChoice !== null || !questions[currentIndex]) return;
 
-  useEffect(() => {
-    (async () => {
-      console.log('--- Quiz Initialization Start ---');
-      try {
-        const ids = await QuizStorage.getWrongIds();
-        console.log('Wrong IDs loaded:', ids.length);
-        const custom = await QuizStorage.getCustomQuestions();
-        console.log('Custom questions loaded:', custom.length);
-        setWrongIds(ids);
-        setCustomQuestions(custom);
-      } catch (e) {
-        console.error('Initial load failed:', e);
-      } finally {
-        console.log('Loading finished');
-        setLoading(false);
-      }
-    })();
-  }, []);
+    setSelectedChoice(index);
+    setShowAnswer(true);
 
-  // ... rest of the code remains same
-  const handleSelect = (idx: number) => {
-    if (selectedIdx !== null || !currentQuestion) return;
-    setSelectedIdx(idx);
-    setShowExplanation(true);
-
-    if (idx === currentQuestion.answer) {
+    if (index === questions[currentIndex].answer) {
       setScore(s => s + 1);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
-      const newIds = [...new Set([...wrongIds, currentQuestion.id])];
-      setWrongIds(newIds);
-      QuizStorage.saveWrongIds(newIds);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
   };
 
-  const nextQuestion = () => {
-    if (currentIdx < questions.length - 1) {
-      setCurrentIdx(i => i + 1);
-      setSelectedIdx(null);
-      setShowExplanation(false);
+  const goToNextQuestion = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+      setSelectedChoice(null);
+      setShowAnswer(false);
     } else {
-      Alert.alert('학습 완료!', `점수: ${score}/${questions.length}`, [
-        { text: '다시 풀기', onPress: resetQuiz }
-      ]);
+      setIsQuizFinished(true);
     }
   };
 
   const resetQuiz = () => {
-    setCurrentIdx(0);
-    setSelectedIdx(null);
-    setShowExplanation(false);
+    setCurrentIndex(0);
+    setSelectedChoice(null);
+    setShowAnswer(false);
     setScore(0);
-  };
-
-  const toggleMode = (newMode: QuizMode) => {
-    if (newMode === 'WRONG' && wrongIds.length === 0) {
-      Alert.alert('알림', '저장된 오답이 없습니다!');
-      return;
-    }
-    setMode(newMode);
-    resetQuiz();
-  };
-
-  const removeWrong = async (id: number) => {
-    const newIds = wrongIds.filter(v => v !== id);
-    setWrongIds(newIds);
-    await QuizStorage.saveWrongIds(newIds);
-    if (mode === 'WRONG' && currentIdx >= newIds.length && currentIdx > 0) {
-      setCurrentIdx(currentIdx - 1);
-    }
-  };
-
-  const importQuestions = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/json', 'text/comma-separated-values', 'text/plain'],
-        copyToCacheDirectory: true
-      });
-      if (result.canceled) return;
-
-      const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri);
-      const fileName = result.assets[0].name.toLowerCase();
-      
-      let imported: Partial<Question>[] = fileName.endsWith('.json') 
-        ? QuizParser.parseJSON(fileContent) 
-        : QuizParser.parseCSV(fileContent);
-
-      const lastId = allQuestions.length > 0 ? Math.max(...allQuestions.map(q => q.id)) : 0;
-      const processed = imported.map((q, i) => ({ ...q, id: lastId + i + 1 } as Question));
-      
-      const newCustom = [...customQuestions, ...processed];
-      setCustomQuestions(processed); // This was a bug in previous version (should merge)
-      // Fixed:
-      setCustomQuestions(prev => [...prev, ...processed]);
-      await QuizStorage.saveCustomQuestions(newCustom);
-
-      Alert.alert('성공', `${processed.length}개의 문제를 추가했습니다.`);
-    } catch (e) {
-      Alert.alert('오류', '파일 형식이 잘못되었습니다.');
-    }
+    setIsQuizFinished(false);
   };
 
   return {
-    loading, questions, currentQuestion, currentIdx, selectedIdx, showExplanation, score, mode, wrongIds,
-    handleSelect, nextQuestion, toggleMode, removeWrong, importQuestions
+    currentQuestion: questions[currentIndex],
+    currentIndex,
+    totalQuestions: questions.length,
+    selectedChoice,
+    isCorrect: selectedChoice === questions[currentIndex]?.answer,
+    showAnswer,
+    score,
+    isQuizFinished,
+    handleChoiceSelect,
+    goToNextQuestion,
+    resetQuiz,
+    loadQuestions,
   };
 };

@@ -1,86 +1,225 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-
-// 아키텍처 기반 임포트
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useQuiz } from './src/hooks/useQuiz';
-import { TopBar } from './src/components/TopBar';
-import { ProgressBar } from './src/components/ProgressBar';
-import { QuizHeader } from './src/components/QuizHeader';
-import { ChoiceList } from './src/components/ChoiceList';
-import { ExplanationBox } from './src/components/ExplanationBox';
+import { DataService } from './src/services/dataService';
+import TopBar from './src/components/TopBar';
+import ProgressBar from './src/components/ProgressBar';
+import QuizHeader from './src/components/QuizHeader';
+import ChoiceList from './src/components/ChoiceList';
+import ExplanationBox from './src/components/ExplanationBox';
 
 export default function App() {
+  const [selectedExam, setSelectedExam] = useState<any>(null);
   const {
-    loading, questions, currentQuestion, currentIdx, selectedIdx, showExplanation, 
-    mode, wrongIds, handleSelect, nextQuestion, toggleMode, removeWrong, importQuestions
+    currentQuestion,
+    currentIndex,
+    totalQuestions,
+    selectedChoice,
+    isCorrect,
+    showAnswer,
+    score,
+    handleChoiceSelect,
+    goToNextQuestion,
+    resetQuiz,
+    isQuizFinished,
+    loadQuestions,
   } = useQuiz();
 
-  if (loading) {
+  const handleSelectExam = (exam: any) => {
+    const questions = DataService.getQuestionsByFile(exam.file);
+    loadQuestions(questions);
+    setSelectedExam(exam);
+  };
+
+  const handleBackToList = () => {
+    setSelectedExam(null);
+    resetQuiz();
+  };
+
+  // Exam List Screen
+  if (!selectedExam) {
+    const examList = DataService.getExamList();
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.title}>QuizNote 📚</Text>
+            <Text style={styles.subtitle}>정보처리기사 기출문제 (05-25년)</Text>
+          </View>
+          <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
+            {examList.map((exam, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.examItem}
+                onPress={() => handleSelectExam(exam)}
+              >
+                <View style={styles.examInfo}>
+                  <Text style={styles.examTitle}>{exam.title}</Text>
+                  <Text style={styles.examMeta}>{exam.count} 문제</Text>
+                </View>
+                <Text style={styles.arrow}>›</Text>
+              </TouchableOpacity>
+            ))}
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
-  const progress = questions.length > 0 ? (currentIdx + 1) / questions.length : 0;
+  // Quiz Finished Screen
+  if (isQuizFinished) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.finishedContainer}>
+            <Text style={styles.finishedEmoji}>🎉</Text>
+            <Text style={styles.finishedTitle}>학습 완료!</Text>
+            <Text style={styles.scoreText}>{score} / {totalQuestions}</Text>
+            <TouchableOpacity style={styles.button} onPress={handleBackToList}>
+              <Text style={styles.buttonText}>목록으로 돌아가기</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
 
+  // Main Quiz Screen
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      
-      <TopBar 
-        mode={mode} 
-        wrongCount={wrongIds.length} 
-        onToggleMode={toggleMode} 
-        onImport={importQuestions} 
-      />
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <TopBar 
+          onBack={handleBackToList} 
+          title={selectedExam.title} 
+          score={score} 
+        />
+        
+        <ProgressBar 
+          current={currentIndex + 1} 
+          total={totalQuestions} 
+        />
 
-      <ProgressBar progress={progress} />
-
-      {questions.length > 0 && currentQuestion ? (
-        <ScrollView style={styles.quizContainer} showsVerticalScrollIndicator={false}>
-          <QuizHeader 
-            source={currentQuestion.source} 
-            subject={currentQuestion.subject} 
-            currentIdx={currentIdx} 
-            total={questions.length} 
-          />
-
-          <Text style={styles.questionText}>{currentQuestion.question}</Text>
-
+        <View style={styles.quizContent}>
+          <QuizHeader question={currentQuestion} />
+          
           <ChoiceList 
-            choices={currentQuestion.choices} 
-            selectedIdx={selectedIdx} 
-            correctIdx={currentQuestion.answer} 
-            onSelect={handleSelect} 
+            choices={currentQuestion.choices}
+            selectedChoice={selectedChoice}
+            correctAnswer={currentQuestion.answer}
+            showAnswer={showAnswer}
+            isCorrect={isCorrect}
+            onSelect={handleChoiceSelect}
           />
 
-          {showExplanation && (
+          {showAnswer && (
             <ExplanationBox 
-              explanation={currentQuestion.explanation} 
-              isCorrect={selectedIdx === currentQuestion.answer}
-              canRemove={mode === 'WRONG'}
-              onRemove={() => removeWrong(currentQuestion.id)}
-              onNext={nextQuestion}
+              explanation={currentQuestion.explanation}
+              onNext={goToNextQuestion}
+              isLast={currentIndex === totalQuestions - 1}
             />
           )}
-          <View style={{ height: 50 }} />
-        </ScrollView>
-      ) : (
-        <View style={styles.centerContainer}>
-          <Text style={styles.emptyText}>문제가 없습니다. 새로운 문제를 임포트해보세요!</Text>
         </View>
-      )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F2F2F7' },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  quizContainer: { padding: 20 },
-  questionText: { fontSize: 19, fontWeight: 'bold', lineHeight: 26, color: '#1C1C1E', marginBottom: 25 },
-  emptyText: { color: '#8E8E93', textAlign: 'center', fontSize: 16 }
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  headerContainer: {
+    padding: 24,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#1A1A1A',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 4,
+  },
+  listContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  examItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  examInfo: {
+    flex: 1,
+  },
+  examTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  examMeta: {
+    fontSize: 12,
+    color: '#999999',
+    marginTop: 4,
+  },
+  arrow: {
+    fontSize: 24,
+    color: '#CCCCCC',
+    marginLeft: 10,
+  },
+  quizContent: {
+    flex: 1,
+    padding: 20,
+  },
+  finishedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  finishedEmoji: {
+    fontSize: 80,
+    marginBottom: 20,
+  },
+  finishedTitle: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#1A1A1A',
+    marginBottom: 10,
+  },
+  scoreText: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: '#007AFF',
+    marginBottom: 40,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
 });

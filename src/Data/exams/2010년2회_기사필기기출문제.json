@@ -1,0 +1,15 @@
+[
+  {
+    "id": "2010년2회_기사필기기출문제.pdf_3",
+    "subject": "전체",
+    "question": "다음 SQL 명령 중 DDL에 해당하는 것으로만 나열된 것은?",
+    "choices": [
+      "CREATE",
+      "SELECT",
+      "DROP",
+      "ALTER.. ⑤ DELETE ⑥ INSERT ⑦ UPDATE"
+    ],
+    "answer": 0,
+    "explanation": "해설은 준비 중입니다."
+  }
+]

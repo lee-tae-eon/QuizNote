@@ -1,50 +1,118 @@
-// src/components/ChoiceList.tsx
 import React from 'react';
 import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
 
 interface Props {
   choices: string[];
-  selectedIdx: number | null;
-  correctIdx: number;
-  onSelect: (idx: number) => void;
+  selectedChoice: number | null;
+  correctAnswer: number;
+  showAnswer: boolean;
+  isCorrect: boolean;
+  onSelect: (index: number) => void;
 }
 
-export const ChoiceList: React.FC<Props> = ({ choices, selectedIdx, correctIdx, onSelect }) => (
-  <View style={styles.choicesBox}>
-    {choices.map((choice, idx) => {
-      let btnStyle: any = styles.choiceButton;
-      let txtStyle: any = styles.choiceText;
-      
-      if (selectedIdx !== null) {
-        if (idx === correctIdx) {
-          btnStyle = [styles.choiceButton, styles.correctButton];
-          txtStyle = [styles.choiceText, styles.correctText];
-        } else if (idx === selectedIdx) {
-          btnStyle = [styles.choiceButton, styles.wrongButton];
-          txtStyle = [styles.choiceText, styles.wrongText];
-        }
-      }
+const ChoiceList: React.FC<Props> = ({ 
+  choices, 
+  selectedChoice, 
+  correctAnswer, 
+  showAnswer, 
+  onSelect 
+}) => {
+  return (
+    <View style={styles.container}>
+      {choices.map((choice, index) => {
+        const isSelected = selectedChoice === index;
+        const isCorrect = index === correctAnswer;
+        
+        let itemStyle: any = styles.choiceItem;
+        let textStyle: any = styles.choiceText;
+        let numberStyle: any = styles.number;
 
-      return (
-        <TouchableOpacity 
-          key={idx} 
-          style={btnStyle} 
-          onPress={() => onSelect(idx)} 
-          disabled={selectedIdx !== null}
-        >
-          <Text style={txtStyle}>{idx + 1}. {choice}</Text>
-        </TouchableOpacity>
-      );
-    })}
-  </View>
-);
+        if (showAnswer) {
+          if (isCorrect) {
+            itemStyle = [styles.choiceItem, styles.correctItem];
+            textStyle = [styles.choiceText, styles.correctText];
+            numberStyle = [styles.number, styles.correctText];
+          } else if (isSelected) {
+            itemStyle = [styles.choiceItem, styles.wrongItem];
+            textStyle = [styles.choiceText, styles.wrongText];
+            numberStyle = [styles.number, styles.wrongText];
+          }
+        } else if (isSelected) {
+          itemStyle = [styles.choiceItem, styles.selectedItem];
+        }
+
+        return (
+          <TouchableOpacity
+            key={index}
+            style={itemStyle}
+            onPress={() => onSelect(index)}
+            disabled={showAnswer}
+            activeOpacity={0.7}
+          >
+            <View style={styles.content}>
+              <Text style={numberStyle}>{index + 1}</Text>
+              <Text style={textStyle}>{choice}</Text>
+            </View>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  choicesBox: { marginBottom: 20 },
-  choiceButton: { backgroundColor: '#FFF', padding: 16, borderRadius: 12, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
-  choiceText: { fontSize: 16, color: '#3A3A3C' },
-  correctButton: { backgroundColor: '#34C759' },
-  correctText: { color: '#FFF', fontWeight: 'bold' },
-  wrongButton: { backgroundColor: '#FF3B30' },
-  wrongText: { color: '#FFF', fontWeight: 'bold' },
+  container: {
+    marginVertical: 10,
+  },
+  choiceItem: {
+    backgroundColor: '#FFFFFF',
+    padding: 18,
+    borderRadius: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  selectedItem: {
+    borderColor: '#007AFF',
+    backgroundColor: '#F0F7FF',
+  },
+  correctItem: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#4CAF50',
+  },
+  wrongItem: {
+    backgroundColor: '#FFEBEE',
+    borderColor: '#FF5252',
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  number: {
+    width: 28,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#999999',
+  },
+  choiceText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333333',
+    lineHeight: 22,
+  },
+  correctText: {
+    color: '#2E7D32',
+    fontWeight: '600',
+  },
+  wrongText: {
+    color: '#C62828',
+    fontWeight: '600',
+  },
 });
+
+export default ChoiceList;
