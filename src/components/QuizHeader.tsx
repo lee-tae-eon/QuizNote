@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Text, Image } from 'react-native';
-import { Question } from '../types/quiz';
+import { Question } from '../types/exam';
 import { ImageService } from '../services/imageService';
 
 interface Props {

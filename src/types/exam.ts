@@ -1,4 +1,4 @@
-// src/types/quiz.ts
+// src/types/exam.ts
 export interface Question {
   id: number;
   subject: string;
@@ -7,6 +7,15 @@ export interface Question {
   choices: string[];
   answer: number;
   explanation: string;
+  image?: string;
+}
+
+export interface ExamSet {
+  id: string;
+  title: string;
+  file: string;
+  count: number;
+  questions: Question[];
 }
 
 export type QuizMode = 'ALL' | 'WRONG';

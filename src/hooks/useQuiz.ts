@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
-import { Question } from '../types/quiz';
+import { Question, QuizMode } from '../types/exam';
 
 export const useQuiz = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -25,7 +25,7 @@ export const useQuiz = () => {
     setSelectedChoice(index);
     setShowAnswer(true);
 
-    if (index === questions[currentIndex].answer) {
+    if (index + 1 === questions[currentIndex].answer) {
       setScore(s => s + 1);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
@@ -56,7 +56,7 @@ export const useQuiz = () => {
     currentIndex,
     totalQuestions: questions.length,
     selectedChoice,
-    isCorrect: selectedChoice === questions[currentIndex]?.answer,
+    isCorrect: selectedChoice !== null && (selectedChoice + 1 === questions[currentIndex]?.answer),
     showAnswer,
     score,
     isQuizFinished,

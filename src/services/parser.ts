@@ -1,5 +1,5 @@
 // src/services/parser.ts
-import { Question } from '../types/quiz';
+import { Question } from '../types/exam';
 
 export const QuizParser = {
   parseJSON(text: string): Partial<Question>[] {

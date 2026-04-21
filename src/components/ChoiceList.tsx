@@ -21,7 +21,7 @@ const ChoiceList: React.FC<Props> = ({
     <View style={styles.container}>
       {choices.map((choice, index) => {
         const isSelected = selectedChoice === index;
-        const isCorrect = index === correctAnswer;
+        const isCorrect = index + 1 === correctAnswer;
         
         let itemStyle: any = styles.choiceItem;
         let textStyle: any = styles.choiceText;

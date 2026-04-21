@@ -1,6 +1,6 @@
 // src/services/storage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Question } from '../types/quiz';
+import { Question } from '../types/exam';
 
 const WRONG_KEY = 'WRONG_ANSWERS_IDS';
 const CUSTOM_KEY = 'CUSTOM_QUESTIONS';
