@@ -134,6 +134,27 @@ export const DataService = {
     }));
   },
 
+  getExamsByYear: (): { year: string; exams: any[] }[] => {
+    const list = DataService.getExamList();
+    const groups: { [key: string]: any[] } = {};
+    
+    list.forEach(exam => {
+      // Extract year from title (e.g., "2025년3회..." -> "2025")
+      const yearMatch = exam.title.match(/(\d{2,4})년/);
+      const year = yearMatch ? (yearMatch[1].length === 2 ? `20${yearMatch[1]}` : yearMatch[1]) : '기타';
+      
+      if (!groups[year]) groups[year] = [];
+      groups[year].push(exam);
+    });
+
+    return Object.keys(groups)
+      .sort((a, b) => b.localeCompare(a)) // Latest year first
+      .map(year => ({
+        year,
+        exams: groups[year].sort((a, b) => b.id.localeCompare(a.id))
+      }));
+  },
+
   getExamById: (id: string): any | undefined => {
     return ALL_EXAMS.find((e) => e.id === id);
   },
@@ -142,4 +163,35 @@ export const DataService = {
     const exam = ALL_EXAMS.find((e) => e.id === fileId);
     return exam ? exam.questions : [];
   },
+
+  getRandomQuestions: (limit: number = 50): { examId: string; question: Question }[] => {
+    const allQuestions: { examId: string; question: Question }[] = [];
+    ALL_EXAMS.forEach(exam => {
+      exam.questions.forEach((q: Question) => {
+        allQuestions.push({ examId: exam.id, question: q });
+      });
+    });
+
+    // Shuffle
+    for (let i = allQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+    }
+
+    return allQuestions.slice(0, limit);
+  },
+
+  getQuestionsByIds: (ids: { question_id: number; exam_id: string }[]): Question[] => {
+    const results: Question[] = [];
+    ids.forEach(item => {
+      const exam = ALL_EXAMS.find(e => e.id === item.exam_id);
+      if (exam) {
+        const question = exam.questions.find((q: Question) => q.id === item.question_id);
+        if (question) {
+          results.push({ ...question, source: exam.title }); // Attach source title
+        }
+      }
+    });
+    return results;
+  }
 };

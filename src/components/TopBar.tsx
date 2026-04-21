@@ -1,5 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../constants/theme';
 
 interface Props {
   onBack: () => void;
@@ -10,38 +12,31 @@ interface Props {
 const TopBar: React.FC<Props> = ({ onBack, title, score }) => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
-        <Text style={styles.backText}>‹ 목록</Text>
+      <TouchableOpacity onPress={onBack} style={styles.backButton}>
+        <Ionicons name="chevron-back" size={28} color={COLORS.text} />
       </TouchableOpacity>
       
       <View style={styles.titleContainer}>
         <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        <Text style={styles.scoreText}>맞힌 개수: {score}</Text>
       </View>
-      
-      <View style={styles.scoreBadge}>
-        <Text style={styles.scoreText}>{score}점</Text>
-      </View>
+      <View style={{ width: 60 }} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    height: 56,
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: COLORS.border,
   },
   backButton: {
     width: 60,
-  },
-  backText: {
-    color: '#007AFF',
-    fontSize: 17,
-    fontWeight: '500',
   },
   titleContainer: {
     flex: 1,
@@ -49,17 +44,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: '600',
-    color: '#1A1A1A',
-  },
-  scoreBadge: {
-    width: 60,
-    alignItems: 'flex-end',
+    fontWeight: '700',
+    color: COLORS.text,
   },
   scoreText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#007AFF',
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginTop: 2,
   },
 });
 
