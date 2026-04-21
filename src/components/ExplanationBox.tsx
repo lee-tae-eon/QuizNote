@@ -1,38 +1,66 @@
-// src/components/ExplanationBox.tsx
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 
 interface Props {
   explanation: string;
-  isCorrect: boolean;
-  canRemove: boolean;
-  onRemove: () => void;
   onNext: () => void;
+  isLast: boolean;
 }
 
-export const ExplanationBox: React.FC<Props> = ({ explanation, isCorrect, canRemove, onRemove, onNext }) => (
-  <View style={styles.explanationBox}>
-    <View style={styles.explanationHeader}>
-      <Text style={styles.explanationTitle}>💡 해설</Text>
-      {canRemove && isCorrect && (
-        <TouchableOpacity onPress={onRemove}>
-          <Text style={styles.removeText}>오답 제거</Text>
-        </TouchableOpacity>
-      )}
+const ExplanationBox: React.FC<Props> = ({ explanation, onNext, isLast }) => {
+  return (
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>💡 정답 해설</Text>
+        <Text style={styles.text}>{explanation}</Text>
+      </View>
+      
+      <TouchableOpacity style={styles.nextButton} onPress={onNext}>
+        <Text style={styles.nextButtonText}>
+          {isLast ? '결과 보기' : '다음 문제'}
+        </Text>
+      </TouchableOpacity>
     </View>
-    <Text style={styles.explanationText}>{explanation}</Text>
-    <TouchableOpacity style={styles.nextButton} onPress={onNext}>
-      <Text style={styles.nextButtonText}>다음</Text>
-    </TouchableOpacity>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
-  explanationBox: { padding: 20, backgroundColor: '#FFF', borderRadius: 16, shadowOpacity: 0.1, shadowRadius: 4 },
-  explanationHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  explanationTitle: { fontWeight: 'bold', fontSize: 16 },
-  removeText: { color: '#FF3B30', fontSize: 12, fontWeight: 'bold' },
-  explanationText: { fontSize: 15, color: '#48484A', lineHeight: 22, marginBottom: 20 },
-  nextButton: { backgroundColor: '#007AFF', padding: 15, borderRadius: 12, alignItems: 'center' },
-  nextButtonText: { color: '#FFF', fontWeight: 'bold' },
+  container: {
+    marginTop: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  content: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  text: {
+    fontSize: 15,
+    color: '#666666',
+    lineHeight: 22,
+  },
+  nextButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  nextButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
+
+export default ExplanationBox;

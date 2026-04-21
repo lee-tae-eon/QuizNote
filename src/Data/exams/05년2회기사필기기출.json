@@ -1,28 +1,37 @@
 [
   {
-    "id": "05년2회기사필기기출.pdf_11",
-    "subject": "데이터베이스",
-    "question": "데이터베이스 설계단계의 순서로 알맞은 것은?",
-    "choices": [
-      "물리적 설계",
-      "구현",
-      "개념적 설계",
-      "요구 조건 분석 ⑤ 논리적 설계"
-    ],
-    "answer": 0,
-    "explanation": "해설은 준비 중입니다."
+    "id": "05년2회_1",
+    "question": "SQL 명령어로 수행된 결과를 실제 물리적 디스크로 저장하는 SQL 명령은?",
+    "choices": ["COMMIT", "ROLLBACK", "GRANT", "REVOKE"],
+    "answer": 1,
+    "explanation": "COMMIT 명령어는 트랜잭션의 결과를 확정하고 디스크에 영구적으로 반영합니다."
   },
   {
-    "id": "05년2회기사필기기출.pdf_29",
-    "subject": "데이터베이스",
-    "question": "인터럽트 체제의 동작을 나열하였다. 수행 순서가 옳은 것은?",
-    "choices": [
-      "현재 수행중인 명령을 완료하고 복귀 주소를 저장한다.",
-      "인터럽트 요청 신호가 발생한다.",
-      "보존한 프로그램 상태로 복귀한다.",
-      "인터럽트 서비스 루틴을 수행한다. ⑤ 어느 장치가 인터럽트를 요청했는지 찾는다."
-    ],
-    "answer": 0,
-    "explanation": "해설은 준비 중입니다."
+    "id": "05년2회_2",
+    "question": "다음 영문의 괄호에 가장 적합한 것은?\n\n「One of the main reasons for using DBMS is to have central control of both the data and the programs that access those data. The person who has such central control over the system is called the (_____).」",
+    "choices": ["User", "Programmer", "DBA", "Designer"],
+    "answer": 3,
+    "explanation": "DBMS를 중앙 집중적으로 제어하는 사람을 DBA(Database Administrator)라고 합니다."
+  },
+  {
+    "id": "05년2회_3",
+    "question": "트랜잭션 결과 관련 있는 모든 연산들은 완전히 실행되어야 하며, 그렇지 않을 경우 전혀 실행되지 않아야 한다는 트랜잭션의 요구 사항은?",
+    "choices": ["Atomicity", "Consistency", "Isolation", "Durability"],
+    "answer": 1,
+    "explanation": "원자성(Atomicity)은 트랜잭션이 전부 실행되거나 전혀 실행되지 않아야 함을 의미합니다."
+  },
+  {
+    "id": "05년2회_4",
+    "question": "데이터의 독립성을 유지하기 위해 데이터베이스의 구조를 3단계로 나누어 설명한다. 다음 중 3단계가 아닌 것은?",
+    "choices": ["외부 스키마", "개념 스키마", "내부 스키마", "물리 스키마"],
+    "answer": 4,
+    "explanation": "3층 스키마 구조는 외부, 개념, 내부 스키마로 구성됩니다."
+  },
+  {
+    "id": "05년2회_5",
+    "question": "릴레이션을 구성하는 각 열(Column)을 무엇이라 하는가?",
+    "choices": ["Attribute", "Tuple", "Domain", "Degree"],
+    "answer": 1,
+    "explanation": "릴레이션의 열은 속성(Attribute)이라고 합니다."
   }
 ]

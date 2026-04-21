@@ -1,20 +1,58 @@
-// src/components/ProgressBar.tsx
 import React from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
-
-const { width } = Dimensions.get('window');
+import { StyleSheet, View, Text } from 'react-native';
 
 interface Props {
-  progress: number; // 0 to 1
+  current: number;
+  total: number;
 }
 
-export const ProgressBar: React.FC<Props> = ({ progress }) => (
-  <View style={styles.container}>
-    <View style={[styles.bar, { width: width * progress }]} />
-  </View>
-);
+const ProgressBar: React.FC<Props> = ({ current, total }) => {
+  const progress = total > 0 ? (current / total) * 100 : 0;
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.barBackground}>
+        <View style={[styles.barFill, { width: `${progress}%` }]} />
+      </View>
+      <View style={styles.textContainer}>
+        <Text style={styles.progressText}>
+          질문 <Text style={styles.currentText}>{current}</Text> / {total}
+        </Text>
+      </View>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  container: { height: 4, backgroundColor: '#E5E5EA', width: '100%' },
-  bar: { height: '100%', backgroundColor: '#007AFF' },
+  container: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  barBackground: {
+    height: 6,
+    backgroundColor: '#EEEEEE',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  barFill: {
+    height: '100%',
+    backgroundColor: '#007AFF',
+  },
+  textContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  progressText: {
+    fontSize: 12,
+    color: '#999999',
+    fontWeight: '500',
+  },
+  currentText: {
+    color: '#007AFF',
+    fontWeight: '700',
+  },
 });
+
+export default ProgressBar;

@@ -1,7 +1,6 @@
 [
   {
-    "id": "2009년01회기사필기.pdf_25",
-    "subject": "전체",
+    "id": "2009년01회기사필기_1",
     "question": "접근 시간(Access Time)이 빠른 순서부터 나열된 것은?",
     "choices": [
       "Main Memory",
@@ -9,7 +8,19 @@
       "Magnetic Disk",
       "Magnetic Tape"
     ],
-    "answer": 0,
-    "explanation": "해설은 준비 중입니다."
+    "answer": 4,
+    "explanation": ""
+  },
+  {
+    "id": "2009년01회기사필기_2",
+    "question": "다음그림은입․출력시스템의구성도이다.",
+    "choices": [
+      ",",
+      ",",
+      ",",
+      "의내용을 순서대로 나열한 것은? ④ 주기억장치 ③ 주 기 억 ① ② 입출력버스 장 치 ① ② 버 스 ③ 주기억장치 ④"
+    ],
+    "answer": 4,
+    "explanation": ""
   }
 ]

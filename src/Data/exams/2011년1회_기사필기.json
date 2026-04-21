@@ -1,15 +1,26 @@
 [
   {
-    "id": "2011년1회_기사필기.pdf_37",
-    "subject": "전체",
-    "question": "Fetch Cycle에서 일어나는 Micro Instruction이다. 실행 순서가 옳은 것은? (단, MAR : Memory Address Register, MBR : Memory Buffer Register, - PC : Program Counter OPR : Operation Code Register)",
+    "id": "2011년1회_기사필기_1",
+    "question": "다음은인터럽트체제의동작을나열한것이다.수행순서를올바르 게 표현한 것은? 1회",
+    "choices": [
+      "현재 수행 중인 프로그램을 안전한 장소에 기억시킨다.",
+      "인터럽트 요청 신호 발생",
+      "보존한 프로그램 상태로 복귀",
+      "인터럽트 서비스 루틴의 수행 ⑤ 어느 장치가 인터럽트를 요청했는가 찾는다."
+    ],
+    "answer": 4,
+    "explanation": ""
+  },
+  {
+    "id": "2011년1회_기사필기_2",
+    "question": "Fetch Cycle에서 일어나는 Micro Instruction이다. 실행 순서가 옳은 것은? (단, MAR : Memory Address Register, MBR : Memory Buffer Register, PC : Program Counter OPR : Operation Code Register)",
     "choices": [
       "MAR ← PC",
       "MBR ← M(MAR)",
       "PC ← PC+1",
       "OPR ← MBR(OP)"
     ],
-    "answer": 0,
-    "explanation": "해설은 준비 중입니다."
+    "answer": 4,
+    "explanation": ""
   }
 ]

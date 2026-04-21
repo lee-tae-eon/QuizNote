@@ -101,26 +101,35 @@ export default function App() {
           total={totalQuestions} 
         />
 
-        <View style={styles.quizContent}>
-          <QuizHeader question={currentQuestion} />
-          
-          <ChoiceList 
-            choices={currentQuestion.choices}
-            selectedChoice={selectedChoice}
-            correctAnswer={currentQuestion.answer}
-            showAnswer={showAnswer}
-            isCorrect={isCorrect}
-            onSelect={handleChoiceSelect}
-          />
+        <ScrollView style={styles.quizContent} showsVerticalScrollIndicator={false}>
+          {currentQuestion ? (
+            <>
+              <QuizHeader question={currentQuestion} />
+              
+              <ChoiceList 
+                choices={currentQuestion.choices}
+                selectedChoice={selectedChoice}
+                correctAnswer={currentQuestion.answer}
+                showAnswer={showAnswer}
+                isCorrect={isCorrect}
+                onSelect={handleChoiceSelect}
+              />
 
-          {showAnswer && (
-            <ExplanationBox 
-              explanation={currentQuestion.explanation}
-              onNext={goToNextQuestion}
-              isLast={currentIndex === totalQuestions - 1}
-            />
+              {showAnswer && (
+                <ExplanationBox 
+                  explanation={currentQuestion.explanation}
+                  onNext={goToNextQuestion}
+                  isLast={currentIndex === totalQuestions - 1}
+                />
+              )}
+              <View style={{ height: 40 }} />
+            </>
+          ) : (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>문제를 불러오는 중입니다...</Text>
+            </View>
           )}
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -186,6 +195,15 @@ const styles = StyleSheet.create({
   quizContent: {
     flex: 1,
     padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666666',
   },
   finishedContainer: {
     flex: 1,

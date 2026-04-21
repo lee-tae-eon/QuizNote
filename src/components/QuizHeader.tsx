@@ -1,27 +1,63 @@
-// src/components/QuizHeader.tsx
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Image } from 'react-native';
+import { Question } from '../types/quiz';
+import { ImageService } from '../services/imageService';
 
 interface Props {
-  source: string;
-  subject: string;
-  currentIdx: number;
-  total: number;
+  question: Question;
 }
 
-export const QuizHeader: React.FC<Props> = ({ source, subject, currentIdx, total }) => (
-  <View style={styles.header}>
-    <View style={{flex:1}}>
-      <Text style={styles.sourceText}>{source}</Text>
-      <Text style={styles.subjectText}>[{subject}]</Text>
+const QuizHeader: React.FC<Props> = ({ question }) => {
+  const examImage = question.image ? ImageService.getImage(question.image) : null;
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.subject}>[{question.subject}]</Text>
+      <Text style={styles.questionText}>{question.question}</Text>
+      
+      {examImage && (
+        <View style={styles.imageContainer}>
+          <Image 
+            source={examImage} 
+            style={styles.image} 
+            resizeMode="contain" 
+          />
+        </View>
+      )}
     </View>
-    <Text style={styles.progressText}>{currentIdx + 1} / {total}</Text>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
-  sourceText: { fontSize: 11, color: '#8E8E93' },
-  subjectText: { fontSize: 14, fontWeight: 'bold', color: '#007AFF' },
-  progressText: { fontSize: 12, color: '#3A3A3C', fontWeight: 'bold' },
+  container: {
+    marginBottom: 20,
+  },
+  subject: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#007AFF',
+    marginBottom: 8,
+  },
+  questionText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    lineHeight: 26,
+    marginBottom: 16,
+  },
+  imageContainer: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+  },
+  image: {
+    width: '100%',
+    height: 200,
+  },
 });
+
+export default QuizHeader;
