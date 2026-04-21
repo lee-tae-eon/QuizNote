@@ -45,3 +45,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Working Files & Images & Data
+src/Data/
+verify_*.png
+exam_files_list.txt
+raw_dump_*.txt
+scratch/
+scripts/pdf_to_images.py
