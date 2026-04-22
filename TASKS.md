@@ -7,6 +7,14 @@
 - [ ] 🟣 NEEDS_FIX (수정 필요)
 - [ ] 🔵 READY_FOR_TEST (테스트 대기)
 
+## 🧑‍🏫 CS TEACHER MISSION (COMPLETED)
+- [x] 🟢 **전 회차 기출문제 해설 전수 추가 (2005-2025)**
+    - 최신 기출(2024-2025) 맞춤형 해설 주입
+    - 레거시 기출 과목별 핵심 개념 해설 주입
+- [x] 🟢 **데이터 안정화 및 런타임 에러 방지**
+    - `DataService.ts` 필터링 로직 강화
+    - 파일명 유니코드 이슈 해결
+
 ## 🗓️ 2-DAY SPRINT PLAN (COMPLETED)
 - [x] 🟢 프로젝트 세팅 및 코어 UI 구현
 - [x] 🟢 AsyncStorage를 활용한 오답 저장 기능
@@ -14,7 +22,7 @@
 - [x] 🟢 외부 파일(JSON/CSV) 임포트 기능 구현
 - [x] 🟢 UX 폴리싱 및 실기기 최종 테스트
 
-## 🛠️ LEGACY ARCHIVE RECONSTRUCTION (2005-2010)
+## 🛠️ LEGACY ARCHIVE RECONSTRUCTION (ONGOING)
 - [x] 🟢 2005년 2회 기사 필기 (100문항 복구 완료)
 - [x] 🟢 2006년 1회 기사 필기 (100문항 복구 완료)
 - [x] 🟢 2006년 4회 기사 필기 (100문항 복구 완료)
