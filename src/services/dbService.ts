@@ -18,18 +18,26 @@ export const DbService = {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         question_id INTEGER NOT NULL,
         exam_id TEXT NOT NULL,
+        user_choice INTEGER,
         added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(question_id, exam_id)
       );
     `);
+
+    // Migration: Add user_choice column if it doesn't exist
+    try {
+      await this.db.execAsync('ALTER TABLE wrong_answers ADD COLUMN user_choice INTEGER;');
+    } catch (e) {
+      // Column might already exist
+    }
   },
 
-  async addWrongAnswer(questionId: number, examId: string) {
+  async addWrongAnswer(questionId: number, examId: string, userChoice: number) {
     if (!this.db) await this.init();
     try {
       await this.db!.runAsync(
-        'INSERT OR IGNORE INTO wrong_answers (question_id, exam_id) VALUES (?, ?)',
-        [questionId, examId]
+        'INSERT OR REPLACE INTO wrong_answers (question_id, exam_id, user_choice) VALUES (?, ?, ?)',
+        [questionId, examId, userChoice]
       );
     } catch (e) {
       console.error('DB Error adding wrong answer:', e);
@@ -51,8 +59,8 @@ export const DbService = {
   async getWrongAnswers() {
     if (!this.db) await this.init();
     try {
-      const allRows = await this.db!.getAllAsync<{ question_id: number; exam_id: string }>(
-        'SELECT question_id, exam_id FROM wrong_answers ORDER BY added_at DESC'
+      const allRows = await this.db!.getAllAsync<{ question_id: number; exam_id: string; user_choice: number }>(
+        'SELECT question_id, exam_id, user_choice FROM wrong_answers ORDER BY added_at DESC'
       );
       return allRows;
     } catch (e) {

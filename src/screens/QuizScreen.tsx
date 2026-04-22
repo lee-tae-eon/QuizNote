@@ -53,7 +53,7 @@ const QuizScreen: React.FC<Props> = ({ exam, questions, onBack, onFinish }) => {
     if (!isCorrectChoice) {
       // We need the original exam ID. In random mode, it's attached to the question.
       const examId = (currentQ as any).examId || exam.id;
-      await DbService.addWrongAnswer(currentQ.id, examId);
+      await DbService.addWrongAnswer(currentQ.id, examId, index + 1);
     }
   };
 
@@ -83,6 +83,12 @@ const QuizScreen: React.FC<Props> = ({ exam, questions, onBack, onFinish }) => {
               isCorrect={isCorrect}
               onSelect={onSelect}
             />
+
+            {showAnswer && currentQuestion.answer === 0 && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>⚠️ 이 문제의 정답 데이터가 누락되어 있습니다.</Text>
+              </View>
+            )}
 
             {showAnswer && (
               <ExplanationBox 
@@ -121,6 +127,20 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: COLORS.textSecondary,
+  },
+  errorContainer: {
+    backgroundColor: '#FFF5F5',
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#FEB2B2',
+  },
+  errorText: {
+    color: '#C53030',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 

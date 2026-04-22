@@ -12,6 +12,67 @@ interface Props {
   onStartReview: (questions: Question[]) => void;
 }
 
+const WrongAnswerCard: React.FC<{ 
+  q: Question, 
+  onRemove: (id: number, examId: string) => void 
+}> = ({ q, onRemove }) => {
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.sourceTag}>{q.source}</Text>
+        <TouchableOpacity onPress={() => onRemove(q.id, (q as any).exam_id || '')}>
+          <Ionicons name="close-circle" size={22} color={COLORS.border} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.questionText}>{q.question}</Text>
+      
+      <View style={styles.cardFooter}>
+        <View style={styles.answerRow}>
+          <View style={[styles.choiceIndicator, { backgroundColor: COLORS.error }]}>
+            <Text style={styles.choiceIndicatorText}>나</Text>
+          </View>
+          <Text style={styles.wrongAnswerText}>
+            {q.userChoice ? `${q.userChoice}번: ${q.choices[q.userChoice-1]}` : '기록 없음'}
+          </Text>
+        </View>
+
+        {showAnswer ? (
+          <>
+            <View style={[styles.answerRow, { marginTop: 8 }]}>
+              <View style={[styles.choiceIndicator, { backgroundColor: COLORS.success }]}>
+                <Text style={styles.choiceIndicatorText}>정</Text>
+              </View>
+              <Text style={styles.correctAnswerText}>
+                {q.answer}번: {q.choices[q.answer-1]}
+              </Text>
+            </View>
+            <View style={styles.explanationContainer}>
+              <Text style={styles.explanationTitle}>해설</Text>
+              <Text style={styles.explanationText}>{q.explanation}</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.hideButton} 
+              onPress={() => setShowAnswer(false)}
+            >
+              <Text style={styles.hideButtonText}>숨기기</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity 
+            style={styles.showButton} 
+            onPress={() => setShowAnswer(true)}
+          >
+            <Ionicons name="eye-outline" size={16} color={COLORS.primary} />
+            <Text style={styles.showButtonText}>정답 및 해설 확인</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+};
+
 const WrongAnswerScreen: React.FC<Props> = ({ onBack, onStartReview }) => {
   const [wrongQuestions, setWrongQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +91,6 @@ const WrongAnswerScreen: React.FC<Props> = ({ onBack, onStartReview }) => {
 
   const handleRemove = async (questionId: number, examId: string) => {
     await DbService.removeWrongAnswer(questionId, examId);
-    // Reload
     loadData();
   };
 
@@ -84,22 +144,11 @@ const WrongAnswerScreen: React.FC<Props> = ({ onBack, onStartReview }) => {
             </TouchableOpacity>
 
             {wrongQuestions.map((q, index) => (
-              <View key={`${q.id}-${index}`} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.sourceTag}>{q.source}</Text>
-                  <TouchableOpacity 
-                    onPress={() => handleRemove(q.id, (q as any).exam_id || '')}
-                  >
-                    <Ionicons name="close-circle" size={22} color={COLORS.border} />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.questionText} numberOfLines={3}>
-                  {q.question}
-                </Text>
-                <View style={styles.cardFooter}>
-                  <Text style={styles.answerLabel}>정답: {q.answer}번</Text>
-                </View>
-              </View>
+              <WrongAnswerCard 
+                key={`${q.id}-${index}`} 
+                q={q} 
+                onRemove={handleRemove} 
+              />
             ))}
           </>
         ) : (
@@ -194,11 +243,77 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
     paddingTop: 10,
+    marginTop: 4,
   },
-  answerLabel: {
+  answerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  choiceIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  choiceIndicatorText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.white,
+  },
+  wrongAnswerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.error,
+  },
+  correctAnswerText: {
     fontSize: 13,
     fontWeight: '600',
     color: COLORS.success,
+  },
+  showButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: 12,
+    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+    borderRadius: 12,
+    gap: 6,
+  },
+  showButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  hideButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    marginTop: 12,
+  },
+  hideButtonText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    textDecorationLine: 'underline',
+  },
+  explanationContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+  },
+  explanationTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginBottom: 8,
+  },
+  explanationText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
   },
   loadingContainer: {
     flex: 1,

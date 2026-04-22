@@ -48,6 +48,7 @@ yarn-error.*
 
 # Working Files & Images & Data
 src/Data/
+src/assets/exams/
 verify_*.png
 exam_files_list.txt
 raw_dump_*.txt
